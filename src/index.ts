@@ -21,6 +21,10 @@ type UrlMapType = {
 
 const domain: string = "localhost:3000";
 
+const swaggerUi = require("swagger-ui-express"),
+swaggerDocument = require("./swagger.json");
+
+
 app.post('/api/shorten', [ body('longUrl').isURL({}) ], 
     async(req: Request, res: Response) => {
 
@@ -59,6 +63,12 @@ app.get('/:shortId', async(req: Request, res: Response) => {
         success: true, data: { longUrl: longUrl }
     });
 });
+
+app.use(
+    '/api-docs',
+    swaggerUi.serve, 
+    swaggerUi.setup(swaggerDocument)
+);
 
 app.listen(3000, () => console.log('The application is listening on port 3000!') );
 
