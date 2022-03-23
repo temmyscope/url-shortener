@@ -1,12 +1,5 @@
 import mongoose from '../configs/db.config';
 
-interface UrlMap {
-	rawUrl: string;
-	shortUrl: string;
-	createdAt?: string;
-	updatedAt?: string;
-}
-
 const urlMapSchema = new mongoose.Schema({
  	rawUrl: {
  		type: String,

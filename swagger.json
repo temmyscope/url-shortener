@@ -1,0 +1,91 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "TemmyScope URL Shortener Project",
+    "description": "My Url Shortener Project Application API",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Shortener",
+      "description": "API for shortening long URLS"
+    }
+  ],
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/api/resolve": {
+      "get": {
+        "description": "Resolve short url for the longer form",
+        "parameters": [
+          {
+            "name": "shortId",
+            "description": "short id to use in resolving longer url",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/shortUrl"
+            },
+            "required": true
+          }
+        ],
+        "tags": ["Resolve Url"],
+        "summary": "Get the longer form of the url",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/longUrl"
+            },
+            "examples": {
+              "data" : {"longUrl": "http://localhost/dot-test-server"}
+            }
+          }
+        }
+      }
+    },
+    "/api/shorten": {
+      "post": {
+        "tags": ["Short Url"],
+        "description": "Shorten A long Url",
+        "parameters": [
+          {
+            "name": "longUrl",
+            "in": "body",
+            "description": "Url that we want to shorten",
+            "schema": {
+              "$ref": "#/definitions/longUrl"
+            },
+            "required": true
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "Short Url has been generated",
+            "schema": {
+              "$ref": "#/definitions/shortUrl"
+            },
+            "examples": {
+              "data" : {"shortUrl": "http://localhost/dQstuIn"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "longUrl": {
+      "type": "string"
+    },
+    "shortUrl": {
+      "type": "string"
+    }
+  }
+}

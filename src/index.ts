@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
 import { Express } from 'express-serve-static-core';
-import { generate } from 'randomized-string';
-import { body, validationResult } from 'express-validator';
+import { body } from 'express-validator';
 import { Mongoose } from './configs/db.config';
 import { UrlMapModel } from './models/UrlMap';
+import { generateShortCode } from './utils/helpers';
 
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
@@ -19,10 +19,10 @@ type UrlMapType = {
     save: () => any
 }
 
-const domain: string = "localhost:3000";
+const domain: string = "localhost:8000";
 
 const swaggerUi = require("swagger-ui-express"),
-swaggerDocument = require("./swagger.json");
+swaggerDocument = require("../swagger.json");
 
 
 app.post('/api/shorten', [ body('longUrl').isURL({}) ], 
@@ -32,13 +32,10 @@ app.post('/api/shorten', [ body('longUrl').isURL({}) ],
     let UrlMap: UrlMapType | null = await UrlMapModel.findOne({ rawUrl: longUrl });
 
     if ( !(UrlMap instanceof UrlMapModel) || UrlMap == null) {
-        let shortUrl: string = generate({
-            charset: "hex", lowerCaseOnly: false, length: 8, symbolsOnly: false
-        });
+        let shortUrl: string = generateShortCode(5, 8);
+
         if ( UrlMapModel.countDocuments({ shortUrl }) > 0 ) {
-            shortUrl = generate({
-                charset: "hex", lowerCaseOnly: false, length: 8, symbolsOnly: false
-            });
+            shortUrl = generateShortCode(5, 8);
         }
         UrlMap = new UrlMapModel({ rawUrl: longUrl, shortUrl });
         await UrlMap?.save();
@@ -46,29 +43,30 @@ app.post('/api/shorten', [ body('longUrl').isURL({}) ],
 
     return res.status(200).json({ 
         success: true, data: { 
-            shortUrl: `${domain}/${UrlMap?.shortUrl}`, longUrl,
+            shortUrl: `${domain}/${UrlMap?.shortUrl}`
         }
     });
 });
 
-app.get('/:shortId', async(req: Request, res: Response) => {
-    let shortUrl: string = req.params.shortId;
+app.post('/api/resolve', [ body('shortId').isString(), body('shortId').isAlphanumeric() ], 
+    async(req: Request, res: Response) => {
 
+    let shortUrl: string = req.body.shortId;
     let longUrl: string; 
-    
+
     let urlMap: UrlMapType | null = await UrlMapModel.findOne({ shortUrl: shortUrl });
-    longUrl = urlMap?.rawUrl ?? "";
-    
-    return res.status(200).json({ 
-        success: true, data: { longUrl: longUrl }
-    });
+
+    if ( urlMap == null ) {
+        return res.status(404).json({ success: false, status: "link not found" });
+    }
+    longUrl = urlMap.rawUrl ?? "";
+
+    return res.status(200).json({ success: true, data: { longUrl: longUrl } });
 });
 
 app.use(
-    '/api-docs',
-    swaggerUi.serve, 
+    '/api-docs', swaggerUi.serve,
     swaggerUi.setup(swaggerDocument)
 );
 
-app.listen(3000, () => console.log('The application is listening on port 3000!') );
-
+app.listen(8000, () => console.log('The application is listening on port 8000!') );
